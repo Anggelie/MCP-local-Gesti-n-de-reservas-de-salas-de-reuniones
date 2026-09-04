@@ -1,1 +1,1 @@
-# MCP-local-Gesti-n-de-reservas-de-salas-de-reuniones
+MCP local: Gestión de reservas de salas de reuniones
