@@ -1,1 +1,1 @@
-# La Fase 1 utiliza únicamente la biblioteca estándar de Python.
+anthropic>=0.40.0,<1.0.0

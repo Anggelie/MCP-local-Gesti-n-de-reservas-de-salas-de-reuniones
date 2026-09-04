@@ -29,5 +29,14 @@ class ConversationHistory:
     def as_dicts(self) -> list[dict[str, str]]:
         return [asdict(message) for message in self._messages]
 
+    def messages(self) -> list[dict[str, str]]:
+        """Devuelve una copia del historial con el formato esperado por el LLM."""
+        return self.as_dicts()
+
+    def remove_last(self) -> None:
+        """Retira el último mensaje cuando una solicitud no pudo completarse."""
+        if self._messages:
+            self._messages.pop()
+
     def __len__(self) -> int:
         return len(self._messages)
