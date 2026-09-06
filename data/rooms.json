@@ -1,0 +1,23 @@
+[
+  {
+    "room_id": "room-001",
+    "name": "Sala Atitlán",
+    "capacity": 12,
+    "location": "Edificio A, segundo nivel",
+    "features": ["pantalla", "videoconferencia", "pizarra"]
+  },
+  {
+    "room_id": "room-002",
+    "name": "Sala Pacífico",
+    "capacity": 8,
+    "location": "Edificio A, primer nivel",
+    "features": ["pantalla", "pizarra"]
+  },
+  {
+    "room_id": "room-003",
+    "name": "Sala Maya",
+    "capacity": 20,
+    "location": "Edificio B, tercer nivel",
+    "features": ["pantalla", "videoconferencia", "pizarra", "micrófonos"]
+  }
+]

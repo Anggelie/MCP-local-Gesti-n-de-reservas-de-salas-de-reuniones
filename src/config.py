@@ -6,6 +6,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 LOGS_DIRECTORY = PROJECT_ROOT / "logs"
 LOG_FILE = LOGS_DIRECTORY / "chatbot.log"
+DATA_DIRECTORY = PROJECT_ROOT / "data"
+ROOMS_FILE = DATA_DIRECTORY / "rooms.json"
+RESERVATIONS_FILE = DATA_DIRECTORY / "reservations.json"
 EXIT_COMMAND = "salir"
 CLEAR_COMMAND = "/clear"
 APPLICATION_NAME = "Chatbot MCP de reservas"
