@@ -38,5 +38,9 @@ class ConversationHistory:
         if self._messages:
             self._messages.pop()
 
+    def clear(self) -> None:
+        """Elimina todos los mensajes de la sesión actual."""
+        self._messages.clear()
+
     def __len__(self) -> int:
         return len(self._messages)

@@ -7,6 +7,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 LOGS_DIRECTORY = PROJECT_ROOT / "logs"
 LOG_FILE = LOGS_DIRECTORY / "chatbot.log"
 EXIT_COMMAND = "salir"
+CLEAR_COMMAND = "/clear"
 APPLICATION_NAME = "Chatbot MCP de reservas"
 DEFAULT_ANTHROPIC_MODEL = "claude-3-5-haiku-latest"
 

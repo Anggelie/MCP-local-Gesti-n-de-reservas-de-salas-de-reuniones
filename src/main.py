@@ -1,6 +1,6 @@
 """Punto de entrada del chatbot de terminal."""
 
-from .config import APPLICATION_NAME, EXIT_COMMAND
+from .config import APPLICATION_NAME, CLEAR_COMMAND, EXIT_COMMAND
 from .conversation import ConversationHistory
 from .llm_client import ClaudeClient
 from .logger import configure_logging
@@ -19,6 +19,7 @@ def run() -> None:
 
     print(f"{APPLICATION_NAME}")
     print(f"Escribe '{EXIT_COMMAND}' para terminar.")
+    print(f"Escribe '{CLEAR_COMMAND}' para reiniciar el contexto.")
 
     while True:
         try:
@@ -35,6 +36,12 @@ def run() -> None:
             logger.info("La sesión terminó por solicitud del usuario")
             print("Chatbot: Hasta luego.")
             break
+
+        if message.casefold() == CLEAR_COMMAND:
+            history.clear()
+            logger.info("El contexto de conversación fue reiniciado")
+            print("Chatbot: El contexto de esta sesión fue reiniciado.")
+            continue
 
         history.add_user(message)
         try:

@@ -54,6 +54,17 @@ Escribe mensajes en la terminal. Para terminar la sesión, escribe:
 salir
 ```
 
+Para eliminar el contexto de la sesión actual sin cerrar el chatbot, escribe:
+
+```text
+/clear
+```
+
+El contexto se mantiene únicamente en memoria. Cada mensaje se almacena como
+un registro con el rol `user` o `assistant` y se envía junto con los mensajes
+anteriores a Claude. Al ejecutar `/clear` o cerrar el programa, la conversación
+se elimina y no se guarda en una base de datos.
+
 ## Estructura
 
 ```text
