@@ -6,6 +6,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 LOGS_DIRECTORY = PROJECT_ROOT / "logs"
 LOG_FILE = LOGS_DIRECTORY / "chatbot.log"
+MCP_LOG_FILE = LOGS_DIRECTORY / "mcp_interactions.log"
 DATA_DIRECTORY = PROJECT_ROOT / "data"
 ROOMS_FILE = DATA_DIRECTORY / "rooms.json"
 RESERVATIONS_FILE = DATA_DIRECTORY / "reservations.json"

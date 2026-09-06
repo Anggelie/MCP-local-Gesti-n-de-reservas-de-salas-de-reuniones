@@ -67,7 +67,7 @@ class MeetingRoomMcpServer:
             except Exception as error:  # Evita romper el transporte por un error inesperado.
                 response = build_error_response(None, -32603, f"Error interno del servidor: {error}")
             if response is not None:
-                print(json.dumps(response, ensure_ascii=False), flush=True)
+                print(json.dumps(response, ensure_ascii=True), flush=True)
 
     def _handle_tool_call(
         self, request_id: Any, params: Any
