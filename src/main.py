@@ -1,20 +1,30 @@
 """Punto de entrada del chatbot de terminal."""
 
+from .chatbot_host import ChatbotHost
 from .config import APPLICATION_NAME, CLEAR_COMMAND, EXIT_COMMAND
-from .conversation import ConversationHistory
 from .llm_client import ClaudeClient
 from .logger import configure_logging
+from .mcp_client import McpClient
 
 
 def run() -> None:
     logger = configure_logging()
-    history = ConversationHistory()
 
     try:
         claude = ClaudeClient()
     except ValueError as error:
         logger.error("Configuración inválida: %s", error)
         print(f"Error de configuración: {error}")
+        return
+
+    mcp_client = McpClient()
+    host = ChatbotHost(claude, mcp_client)
+    try:
+        host.initialize()
+    except RuntimeError as error:
+        logger.error("No fue posible inicializar MCP: %s", error)
+        print(f"Error al inicializar MCP: {error}")
+        mcp_client.close()
         return
 
     print(f"{APPLICATION_NAME}")
@@ -38,23 +48,22 @@ def run() -> None:
             break
 
         if message.casefold() == CLEAR_COMMAND:
-            history.clear()
+            host.clear_context()
             logger.info("El contexto de conversación fue reiniciado")
             print("Chatbot: El contexto de esta sesión fue reiniciado.")
             continue
 
-        history.add_user(message)
         try:
-            response = claude.generate_response(history.messages())
+            response = host.respond(message)
         except RuntimeError as error:
-            history.remove_last()
             logger.error("Error al consultar Claude: %s", error)
             print(f"Error al consultar Claude: {error}")
             continue
 
-        history.add_assistant(response)
-        logger.info("Mensaje procesado; historial actual: %d mensajes", len(history))
+        logger.info("Mensaje procesado por el host")
         print(f"Chatbot: {response}")
+
+    mcp_client.close()
 
 
 if __name__ == "__main__":
