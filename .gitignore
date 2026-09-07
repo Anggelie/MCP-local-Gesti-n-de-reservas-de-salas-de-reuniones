@@ -6,3 +6,4 @@ venv/
 logs/
 .pytest_cache/
 .vscode/
+sandbox/filesystem_demo/
