@@ -78,6 +78,7 @@ class McpHttpRequestHandler(BaseHTTPRequestHandler):
 
 def serve_http(host: str | None = None, port: int | None = None) -> None:
     bind_host, bind_port = get_http_address(host, port)
+    print(f"Starting MCP HTTP server on {bind_host}:{bind_port}", flush=True)
     server = ThreadingHTTPServer((bind_host, bind_port), McpHttpRequestHandler)
     try:
         server.serve_forever()
