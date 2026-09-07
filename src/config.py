@@ -14,6 +14,7 @@ EXIT_COMMAND = "salir"
 CLEAR_COMMAND = "/clear"
 APPLICATION_NAME = "Chatbot MCP de reservas"
 DEFAULT_ANTHROPIC_MODEL = "claude-3-5-haiku-latest"
+DEFAULT_RESERVATIONS_URL = "http://127.0.0.1:8000/mcp"
 
 
 def get_anthropic_api_key() -> str:

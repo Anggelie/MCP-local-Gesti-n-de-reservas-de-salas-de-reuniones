@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 
-from .config import MCP_LOG_FILE, PROJECT_ROOT
+from .config import DEFAULT_RESERVATIONS_URL, MCP_LOG_FILE, PROJECT_ROOT
 from .mcp_client import McpClient
 from .mcp_interaction_logger import McpInteractionLogger
+from .mcp_http_transport import HttpTransport
 from .mcp_transport import StdioTransport
 
 
@@ -59,3 +61,16 @@ def create_reservations_client(log_file: Path = MCP_LOG_FILE) -> McpClient:
         working_directory=PROJECT_ROOT,
     )
     return McpClient(transport, McpInteractionLogger(log_file, "reservations"))
+
+
+def create_remote_reservations_client(
+    url: str | None = None,
+    log_file: Path = MCP_LOG_FILE,
+    timeout: float = 10.0,
+) -> McpClient:
+    """Crea un cliente manual para el mismo MCP mediante HTTP."""
+    remote_url = url or os.getenv("MCP_RESERVATIONS_URL", DEFAULT_RESERVATIONS_URL)
+    return McpClient(
+        HttpTransport(remote_url, timeout=timeout),
+        McpInteractionLogger(log_file, "reservations_remote"),
+    )

@@ -1,12 +1,14 @@
 """Pruebas del ciclo MCP manual para el servidor de reservas."""
 
 import json
+import io
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from src.json_rpc import build_notification, build_request
-from src.mcp_server import MeetingRoomMcpServer
+from src.mcp_server import MeetingRoomMcpServer, serve_forever
 from src.reservation_service import ReservationService
 
 
@@ -44,6 +46,18 @@ class McpServerTests(unittest.TestCase):
         )
 
         self.assertTrue(response["result"]["isError"])
+
+    def test_stdio_continua_despues_de_json_invalido(self) -> None:
+        input_stream = io.StringIO('{mensaje invalido\n{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n')
+        output_stream = io.StringIO()
+
+        with patch("sys.stdin", input_stream), patch("sys.stdout", output_stream):
+            serve_forever(self.server)
+
+        responses = [json.loads(line) for line in output_stream.getvalue().splitlines()]
+        self.assertEqual(responses[0]["error"]["code"], -32700)
+        self.assertEqual(responses[1]["id"], 1)
+        self.assertIn("result", responses[1])
 
 
 if __name__ == "__main__":
