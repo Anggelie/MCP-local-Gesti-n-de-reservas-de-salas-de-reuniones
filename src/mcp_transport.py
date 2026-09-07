@@ -49,7 +49,7 @@ class StdioTransport:
             ) from error
 
         try:
-            return_code = self._process.wait(timeout=0.05)
+            return_code = self._process.wait(timeout=0.2)
         except subprocess.TimeoutExpired:
             return
 

@@ -11,6 +11,30 @@ from typing import Any
 DATE_FORMAT = "%Y-%m-%d"
 TIME_FORMAT = "%H:%M"
 
+INITIAL_ROOMS = [
+    {
+        "room_id": "room-001",
+        "name": "Sala Atitlán",
+        "capacity": 12,
+        "location": "Edificio A, segundo nivel",
+        "features": ["pantalla", "videoconferencia", "pizarra"],
+    },
+    {
+        "room_id": "room-002",
+        "name": "Sala Pacífico",
+        "capacity": 8,
+        "location": "Edificio A, primer nivel",
+        "features": ["pantalla", "pizarra"],
+    },
+    {
+        "room_id": "room-003",
+        "name": "Sala Maya",
+        "capacity": 20,
+        "location": "Edificio B, tercer nivel",
+        "features": ["pantalla", "videoconferencia", "pizarra", "micrófonos"],
+    },
+]
+
 
 class ReservationError(ValueError):
     """Error controlado de una operación de reservas."""
@@ -22,6 +46,14 @@ class ReservationService:
     def __init__(self, rooms_file: Path, reservations_file: Path) -> None:
         self._rooms_file = rooms_file
         self._reservations_file = reservations_file
+        self._ensure_storage()
+
+    def _ensure_storage(self) -> None:
+        self._rooms_file.parent.mkdir(parents=True, exist_ok=True)
+        if not self._rooms_file.exists():
+            self._save(self._rooms_file, INITIAL_ROOMS)
+        if not self._reservations_file.exists():
+            self._save(self._reservations_file, [])
 
     def list_rooms(self) -> list[dict[str, Any]]:
         """Devuelve todas las salas configuradas."""

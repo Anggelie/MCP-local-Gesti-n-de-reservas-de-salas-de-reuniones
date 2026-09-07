@@ -65,6 +65,31 @@ un registro con el rol `user` o `assistant` y se envía junto con los mensajes
 anteriores a Claude. Al ejecutar `/clear` o cerrar el programa, la conversación
 se elimina y no se guarda en una base de datos.
 
+## Remote MCP server
+
+The reservations MCP HTTP server can run locally or as a Render Web Service.
+It uses the standard Python HTTP server and does not require FastAPI, Flask,
+Gunicorn, FastMCP, or an MCP SDK.
+
+Local execution:
+
+```powershell
+python -m src.mcp_http_server
+```
+
+The local defaults are `HOST=127.0.0.1` and `PORT=8000`. Render can inject
+`HOST=0.0.0.0` and its own `PORT` value. The optional `MCP_DATA_DIR` variable
+selects the directory for `rooms.json` and `reservations.json`; if it is empty,
+the initial rooms and an empty reservations file are created automatically.
+
+The service exposes:
+
+- `GET /health` for the Render health check.
+- `POST /mcp` for manual JSON-RPC/MCP messages.
+
+The JSON persistence is intentionally local and may be ephemeral on Render.
+Permanent persistence will be addressed in a later phase.
+
 ## Estructura
 
 ```text

@@ -1,6 +1,7 @@
 """Prueba de integración opcional con el servidor oficial Git MCP."""
 
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -26,6 +27,17 @@ def uvx_is_available() -> bool:
 
 @unittest.skipUnless(uvx_is_available(), "uvx no está disponible para Git MCP")
 class GitMcpIntegrationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._git_dates = {
+            name: os.environ.pop(name, None)
+            for name in ("GIT_AUTHOR_DATE", "GIT_COMMITTER_DATE")
+        }
+
+    def tearDown(self) -> None:
+        for name, value in self._git_dates.items():
+            if value is not None:
+                os.environ[name] = value
+
     def test_operaciones_git_principales(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repository = Path(directory) / "demo_repository"

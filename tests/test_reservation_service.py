@@ -40,6 +40,15 @@ class ReservationServiceTests(unittest.TestCase):
         with self.assertRaisesRegex(ReservationError, "No existe"):
             self.service.cancel_reservation("RES-9999")
 
+    def test_crea_archivos_iniciales_en_directorio_vacio(self) -> None:
+        root = Path(self.directory.name) / "empty-data"
+        service = ReservationService(root / "rooms.json", root / "reservations.json")
+
+        self.assertEqual(len(service.list_rooms()), 3)
+        self.assertEqual(service.list_reservations(), [])
+        self.assertTrue((root / "rooms.json").is_file())
+        self.assertTrue((root / "reservations.json").is_file())
+
 
 if __name__ == "__main__":
     unittest.main()

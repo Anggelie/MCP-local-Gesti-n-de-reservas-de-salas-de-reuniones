@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: mcp-reservas
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m src.mcp_http_server
+    healthCheckPath: /health

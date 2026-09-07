@@ -10,6 +10,15 @@ from typing import Any
 from .mcp_protocol_handler import McpProtocolHandler
 
 MAX_BODY_BYTES = 1_048_576
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 8000
+
+
+def get_http_address(host: str | None = None, port: int | None = None) -> tuple[str, int]:
+    """Obtiene bind host/port locales o los valores inyectados por Render."""
+    bind_host = host or os.getenv("HOST") or DEFAULT_HOST
+    bind_port = port if port is not None else int(os.getenv("PORT") or DEFAULT_PORT)
+    return bind_host, bind_port
 
 
 class McpHttpRequestHandler(BaseHTTPRequestHandler):
@@ -68,8 +77,7 @@ class McpHttpRequestHandler(BaseHTTPRequestHandler):
 
 
 def serve_http(host: str | None = None, port: int | None = None) -> None:
-    bind_host = host or os.getenv("HOST", "127.0.0.1")
-    bind_port = port if port is not None else int(os.getenv("PORT", "8000"))
+    bind_host, bind_port = get_http_address(host, port)
     server = ThreadingHTTPServer((bind_host, bind_port), McpHttpRequestHandler)
     try:
         server.serve_forever()

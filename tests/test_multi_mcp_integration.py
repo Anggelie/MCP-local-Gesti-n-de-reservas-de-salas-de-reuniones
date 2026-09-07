@@ -1,6 +1,7 @@
 """Integracion opcional de Filesystem MCP y Git MCP mediante McpManager."""
 
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -18,6 +19,17 @@ def external_servers_available() -> bool:
 
 @unittest.skipUnless(external_servers_available(), "Faltan git, uvx o npx")
 class MultiMcpIntegrationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._git_dates = {
+            name: os.environ.pop(name, None)
+            for name in ("GIT_AUTHOR_DATE", "GIT_COMMITTER_DATE")
+        }
+
+    def tearDown(self) -> None:
+        for name, value in self._git_dates.items():
+            if value is not None:
+                os.environ[name] = value
+
     def test_flujo_filesystem_y_git(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
