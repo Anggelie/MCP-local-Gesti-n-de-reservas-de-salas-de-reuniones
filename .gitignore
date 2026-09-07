@@ -7,3 +7,4 @@ logs/
 .pytest_cache/
 .vscode/
 sandbox/filesystem_demo/
+sandbox/git_demo/

@@ -63,7 +63,7 @@ class StdioTransport:
         if self._process.stdin is None:
             raise McpTransportError("El canal de entrada del servidor no está disponible.")
         try:
-            self._process.stdin.write(json.dumps(message, ensure_ascii=False) + "\n")
+            self._process.stdin.write(json.dumps(message, ensure_ascii=True) + "\n")
             self._process.stdin.flush()
         except OSError as error:
             raise McpTransportError(f"No se pudo enviar el mensaje MCP: {error}") from error

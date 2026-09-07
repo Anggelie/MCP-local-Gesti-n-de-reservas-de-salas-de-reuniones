@@ -3,9 +3,12 @@
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
-
-from src.mcp_external_servers import FILESYSTEM_SERVER_PACKAGE, filesystem_command
+from src.mcp_external_servers import (
+    FILESYSTEM_SERVER_PACKAGE,
+    GIT_SERVER_PACKAGE,
+    filesystem_command,
+    git_command,
+)
 
 
 class ExternalServerConfigurationTests(unittest.TestCase):
@@ -17,6 +20,9 @@ class ExternalServerConfigurationTests(unittest.TestCase):
 
         self.assertEqual(command[:5], ["cmd", "/c", "npx", "-y", FILESYSTEM_SERVER_PACKAGE])
         self.assertEqual(command[5], str(allowed_directory.resolve()))
+
+    def test_git_command_usa_servidor_oficial_con_uvx(self) -> None:
+        self.assertEqual(git_command(), ["uvx", GIT_SERVER_PACKAGE])
 
 
 if __name__ == "__main__":
