@@ -35,7 +35,7 @@ def create_filesystem_client(
         command=filesystem_command(allowed_directory),
         working_directory=PROJECT_ROOT,
     )
-    return McpClient(transport, McpInteractionLogger(log_file))
+    return McpClient(transport, McpInteractionLogger(log_file, "filesystem"))
 
 
 def git_command() -> list[str]:
@@ -48,4 +48,4 @@ def create_git_client(
 ) -> McpClient:
     """Crea un cliente manual conectado al servidor oficial Git MCP."""
     transport = StdioTransport(command=git_command(), working_directory=PROJECT_ROOT)
-    return McpClient(transport, McpInteractionLogger(log_file))
+    return McpClient(transport, McpInteractionLogger(log_file, "git"))

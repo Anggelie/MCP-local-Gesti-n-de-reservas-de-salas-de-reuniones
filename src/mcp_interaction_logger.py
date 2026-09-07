@@ -11,8 +11,9 @@ from typing import Any
 class McpInteractionLogger:
     """Escribe cada mensaje MCP como un registro JSON independiente."""
 
-    def __init__(self, log_file: Path) -> None:
+    def __init__(self, log_file: Path, server_name: str | None = None) -> None:
         self._log_file = log_file
+        self._server_name = server_name
         self._log_file.parent.mkdir(parents=True, exist_ok=True)
 
     def log(self, direction: str, message: dict[str, Any]) -> None:
@@ -25,6 +26,8 @@ class McpInteractionLogger:
             "direction": direction,
             "message": message,
         }
+        if self._server_name:
+            record["server"] = self._server_name
         if "method" in message:
             record["method"] = message["method"]
         if "id" in message:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -87,7 +88,14 @@ class StdioTransport:
         """Cierra los canales y termina el proceso local del servidor."""
         self._close_streams(only_input=True)
         if self._process.poll() is None:
-            self._process.terminate()
+            if os.name == "nt":
+                subprocess.run(
+                    ["taskkill", "/PID", str(self._process.pid), "/T", "/F"],
+                    capture_output=True,
+                    check=False,
+                )
+            else:
+                self._process.terminate()
             try:
                 self._process.wait(timeout=2)
             except subprocess.TimeoutExpired:

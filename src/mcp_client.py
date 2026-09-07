@@ -41,9 +41,10 @@ class McpClient:
         self,
         transport: StdioTransport | Any | None = None,
         interaction_logger: McpInteractionLogger | None = None,
+        server_name: str | None = None,
     ) -> None:
         self._transport = transport or StdioTransport()
-        self._logger = interaction_logger or McpInteractionLogger(MCP_LOG_FILE)
+        self._logger = interaction_logger or McpInteractionLogger(MCP_LOG_FILE, server_name)
         self._next_id = 1
         self._initialized = False
         self._closed = False
