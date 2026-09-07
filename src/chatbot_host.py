@@ -7,8 +7,9 @@ from collections.abc import Mapping
 from typing import Any
 
 from .conversation import ConversationHistory
-from .mcp_client import McpClient, McpToolError
 from .llm_client import ClaudeClient
+from .mcp_client import McpToolError
+from .mcp_manager import McpManager
 
 
 class ChatbotHost:
@@ -17,18 +18,19 @@ class ChatbotHost:
     def __init__(
         self,
         claude: ClaudeClient,
-        mcp_client: McpClient,
+        mcp_manager: McpManager,
         history: ConversationHistory | None = None,
     ) -> None:
         self._claude = claude
-        self._mcp_client = mcp_client
+        self._mcp_manager = mcp_manager
         self._history = history or ConversationHistory()
         self._llm_tools: list[dict[str, Any]] = []
 
     def initialize(self) -> None:
-        """Inicializa MCP y transforma sus schemas al formato de Anthropic."""
-        self._mcp_client.initialize()
-        self._llm_tools = [self._to_llm_tool(tool) for tool in self._mcp_client.list_tools()]
+        """Prepara el catálogo de tools de un manager ya inicializado."""
+        self._llm_tools = [
+            self._to_llm_tool(tool) for tool in self._mcp_manager.tool_catalog()
+        ]
 
     def respond(self, user_message: str) -> str:
         """Procesa un mensaje y ejecuta como máximo cuatro rondas de tool use."""
@@ -57,7 +59,8 @@ class ChatbotHost:
         name = tool_use.get("name")
         arguments = tool_use.get("input", {})
         try:
-            result = self._mcp_client.call_tool(name, arguments)
+            route = self._mcp_manager.resolve_llm_tool(name)
+            result = self._mcp_manager.call_tool(route, arguments)
             return {
                 "type": "tool_result",
                 "tool_use_id": tool_use_id,
@@ -74,7 +77,7 @@ class ChatbotHost:
     @staticmethod
     def _to_llm_tool(tool: Mapping[str, Any]) -> dict[str, Any]:
         return {
-            "name": tool["name"],
+            "name": tool["llm_name"],
             "description": tool.get("description", ""),
             "input_schema": tool.get("inputSchema", {"type": "object"}),
         }

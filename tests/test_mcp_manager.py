@@ -44,6 +44,12 @@ class McpManagerTests(unittest.TestCase):
         self.assertEqual(filesystem.initialize_count, 1)
         self.assertEqual(git.initialize_count, 1)
         self.assertEqual(set(tools), {"filesystem", "git"})
+        catalog = manager.tool_catalog()
+        filesystem_entry = next(item for item in catalog if item["server"] == "filesystem")
+        self.assertEqual(filesystem_entry["llm_name"], "filesystem__tool_filesystem")
+        self.assertEqual(
+            manager.resolve_llm_tool("git__tool_git"), "git.tool_git"
+        )
         self.assertEqual(git.calls, [("tool_git", {"repo_path": "demo"})])
         self.assertEqual(result["server"], "git")
 

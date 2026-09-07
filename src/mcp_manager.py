@@ -18,6 +18,7 @@ class McpManager:
     def __init__(self) -> None:
         self._clients: dict[str, McpClient] = {}
         self._tools: dict[str, dict[str, str]] = {}
+        self._llm_routes: dict[str, str] = {}
 
     def register(self, server_name: str, client: McpClient) -> None:
         if not server_name or "." in server_name:
@@ -43,6 +44,36 @@ class McpManager:
                         "tool": tool_name,
                     }
         return tools_by_server
+
+    def tool_catalog(self) -> list[dict[str, Any]]:
+        """Devuelve un catálogo unificado con nombres seguros para el LLM."""
+        catalog: list[dict[str, Any]] = []
+        self._llm_routes.clear()
+        for server_name, tools in self.list_tools().items():
+            for tool in tools:
+                mcp_name = tool.get("name")
+                if not isinstance(mcp_name, str):
+                    continue
+                catalog.append(
+                    {
+                        "server": server_name,
+                        "mcp_name": mcp_name,
+                        "llm_name": f"{server_name}__{mcp_name}",
+                        "description": tool.get("description", ""),
+                        "inputSchema": tool.get("inputSchema", {"type": "object"}),
+                    }
+                )
+                self._llm_routes[f"{server_name}__{mcp_name}"] = (
+                    f"{server_name}.{mcp_name}"
+                )
+        return catalog
+
+    def resolve_llm_tool(self, llm_name: str) -> str:
+        """Convierte un nombre expuesto al LLM en una ruta MCP interna."""
+        try:
+            return self._llm_routes[llm_name]
+        except KeyError as error:
+            raise McpManagerError(f"No existe la herramienta del LLM '{llm_name}'.") from error
 
     def call_tool(self, qualified_name: str, arguments: Mapping[str, Any]) -> dict[str, Any]:
         route = self._tools.get(qualified_name)

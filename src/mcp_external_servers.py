@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from .config import MCP_LOG_FILE, PROJECT_ROOT
@@ -49,3 +50,12 @@ def create_git_client(
     """Crea un cliente manual conectado al servidor oficial Git MCP."""
     transport = StdioTransport(command=git_command(), working_directory=PROJECT_ROOT)
     return McpClient(transport, McpInteractionLogger(log_file, "git"))
+
+
+def create_reservations_client(log_file: Path = MCP_LOG_FILE) -> McpClient:
+    """Crea un cliente para el servidor local de reservas."""
+    transport = StdioTransport(
+        command=[sys.executable, "-m", "src.mcp_server"],
+        working_directory=PROJECT_ROOT,
+    )
+    return McpClient(transport, McpInteractionLogger(log_file, "reservations"))
