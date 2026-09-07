@@ -16,6 +16,12 @@ from .mcp_interaction_logger import McpInteractionLogger
 from .mcp_transport import StdioTransport
 
 
+CLIENT_PROTOCOL_VERSION = "2024-11-05"
+CLIENT_NAME = "meeting-room-reservations-client"
+CLIENT_VERSION = "1.0.0"
+CLIENT_CAPABILITIES: dict[str, Any] = {}
+
+
 class McpClientError(RuntimeError):
     """Error general del cliente MCP."""
 
@@ -41,13 +47,47 @@ class McpClient:
         self._next_id = 1
         self._initialized = False
         self._closed = False
+        self._protocol_version: str | None = None
+        self._server_capabilities: dict[str, Any] = {}
+        self._server_info: dict[str, Any] = {}
 
     def initialize(self) -> dict[str, Any]:
         """Ejecuta initialize y la notificación initialized del ciclo MCP."""
-        result = self._request("initialize", {})
+        result = self._request(
+            "initialize",
+            {
+                "protocolVersion": CLIENT_PROTOCOL_VERSION,
+                "capabilities": dict(CLIENT_CAPABILITIES),
+                "clientInfo": {
+                    "name": CLIENT_NAME,
+                    "version": CLIENT_VERSION,
+                },
+            },
+        )
+        protocol_version = result.get("protocolVersion")
+        if not isinstance(protocol_version, str) or not protocol_version:
+            raise McpClientError("La respuesta de initialize no contiene protocolVersion.")
+        self._protocol_version = protocol_version
+        self._server_capabilities = self._copy_mapping(result.get("capabilities"))
+        self._server_info = self._copy_mapping(result.get("serverInfo"))
         self._notify("notifications/initialized")
         self._initialized = True
         return result
+
+    @property
+    def negotiated_protocol_version(self) -> str | None:
+        """Devuelve la versión MCP negociada con el servidor."""
+        return self._protocol_version
+
+    @property
+    def server_capabilities(self) -> dict[str, Any]:
+        """Devuelve una copia de las capacidades anunciadas por el servidor."""
+        return dict(self._server_capabilities)
+
+    @property
+    def server_info(self) -> dict[str, Any]:
+        """Devuelve una copia de la información del servidor, si existe."""
+        return dict(self._server_info)
 
     def list_tools(self) -> list[dict[str, Any]]:
         """Descubre las herramientas publicadas por el servidor."""
@@ -108,6 +148,10 @@ class McpClient:
     def _require_initialized(self) -> None:
         if not self._initialized:
             raise McpClientError("El cliente MCP debe inicializarse antes de usar tools.")
+
+    @staticmethod
+    def _copy_mapping(value: Any) -> dict[str, Any]:
+        return dict(value) if isinstance(value, Mapping) else {}
 
     @staticmethod
     def _extract_tool_error(result: Mapping[str, Any]) -> str:

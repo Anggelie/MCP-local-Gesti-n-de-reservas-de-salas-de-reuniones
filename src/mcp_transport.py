@@ -21,18 +21,41 @@ class StdioTransport:
     def __init__(
         self,
         command: list[str] | None = None,
-        working_directory: Path = PROJECT_ROOT,
+        working_directory: Path | str = PROJECT_ROOT,
     ) -> None:
-        self._command = command or [sys.executable, "-m", "src.mcp_server"]
-        self._process = subprocess.Popen(
-            self._command,
-            cwd=working_directory,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=sys.stderr,
-            text=True,
-            encoding="utf-8",
-            bufsize=1,
+        self._command = command if command is not None else [sys.executable, "-m", "src.mcp_server"]
+        if not self._command:
+            raise McpTransportError("El comando del servidor MCP no puede estar vacío.")
+
+        try:
+            self._process = subprocess.Popen(
+                self._command,
+                cwd=working_directory,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=sys.stderr,
+                text=True,
+                encoding="utf-8",
+                bufsize=1,
+            )
+        except FileNotFoundError as error:
+            raise McpTransportError(
+                f"No se encontró el ejecutable del servidor MCP: {self._command[0]}"
+            ) from error
+        except OSError as error:
+            raise McpTransportError(
+                f"No se pudo iniciar el servidor MCP con el comando {self._command!r}: {error}"
+            ) from error
+
+        try:
+            return_code = self._process.wait(timeout=0.05)
+        except subprocess.TimeoutExpired:
+            return
+
+        self._close_streams()
+        raise McpTransportError(
+            f"El servidor MCP terminó inmediatamente con código {return_code}. "
+            f"Comando: {self._command!r}"
         )
 
     def send(self, message: dict[str, Any]) -> None:
@@ -62,8 +85,7 @@ class StdioTransport:
 
     def close(self) -> None:
         """Cierra los canales y termina el proceso local del servidor."""
-        if self._process.stdin is not None and not self._process.stdin.closed:
-            self._process.stdin.close()
+        self._close_streams(only_input=True)
         if self._process.poll() is None:
             self._process.terminate()
             try:
@@ -71,6 +93,15 @@ class StdioTransport:
             except subprocess.TimeoutExpired:
                 self._process.kill()
                 self._process.wait()
+        self._close_streams()
+
+    def _close_streams(self, only_input: bool = False) -> None:
+        streams = [self._process.stdin]
+        if not only_input:
+            streams.append(self._process.stdout)
+        for stream in streams:
+            if stream is not None and not stream.closed:
+                stream.close()
 
     def __enter__(self) -> "StdioTransport":
         return self

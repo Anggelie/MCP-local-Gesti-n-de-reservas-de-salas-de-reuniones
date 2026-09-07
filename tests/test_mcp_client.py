@@ -1,14 +1,22 @@
 """Pruebas del cliente MCP manual y su logger de interacciones."""
 
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from typing import Any
 
 from src.json_rpc import build_error_response, build_result_response
-from src.mcp_client import McpClient, McpProtocolError
+from src.mcp_client import (
+    CLIENT_NAME,
+    CLIENT_PROTOCOL_VERSION,
+    CLIENT_VERSION,
+    McpClient,
+    McpProtocolError,
+)
 from src.mcp_interaction_logger import McpInteractionLogger
+from src.mcp_transport import McpTransportError, StdioTransport
 
 
 class FakeTransport:
@@ -37,7 +45,14 @@ class McpClientTests(unittest.TestCase):
 
     def test_inicializa_lista_y_llama_tool(self) -> None:
         responses = [
-            build_result_response(1, {"capabilities": {"tools": {}}}),
+            build_result_response(
+                1,
+                {
+                    "protocolVersion": "2025-06-18",
+                    "capabilities": {"tools": {"listChanged": True}},
+                    "serverInfo": {"name": "servidor-prueba", "version": "2.0.0"},
+                },
+            ),
             build_result_response(2, {"tools": [{"name": "list_rooms"}]}),
             build_result_response(3, {"content": [{"type": "text", "text": "disponible"}]}),
         ]
@@ -52,6 +67,17 @@ class McpClientTests(unittest.TestCase):
         self.assertFalse(result.get("isError", False))
         self.assertEqual(transport.sent[1]["method"], "notifications/initialized")
         self.assertEqual(transport.sent[2]["id"], 2)
+        initialize_params = transport.sent[0]["params"]
+        self.assertEqual(initialize_params["protocolVersion"], CLIENT_PROTOCOL_VERSION)
+        self.assertEqual(initialize_params["capabilities"], {})
+        self.assertEqual(
+            initialize_params["clientInfo"],
+            {"name": CLIENT_NAME, "version": CLIENT_VERSION},
+        )
+        self.assertEqual(client.negotiated_protocol_version, "2025-06-18")
+        self.assertEqual(client.server_capabilities, {"tools": {"listChanged": True}})
+        self.assertEqual(client.server_info, {"name": "servidor-prueba", "version": "2.0.0"})
+        client.close()
 
     def test_correlaciona_respuesta_y_maneja_error(self) -> None:
         transport = FakeTransport([build_error_response(1, -32601, "Método no encontrado")])
@@ -59,6 +85,7 @@ class McpClientTests(unittest.TestCase):
 
         with self.assertRaises(McpProtocolError):
             client.initialize()
+        client.close()
 
     def test_logger_registra_direccion_y_mensaje_completo(self) -> None:
         logger = McpInteractionLogger(self.log_file)
@@ -72,6 +99,21 @@ class McpClientTests(unittest.TestCase):
         self.assertEqual(record["id"], 1)
         self.assertEqual(record["message"], message)
         self.assertIn("timestamp", record)
+
+    def test_stdio_transport_acepta_comando_personalizado(self) -> None:
+        command = [sys.executable, "-c", "import sys; sys.stdin.readline()"]
+        transport = StdioTransport(command=command, working_directory=Path.cwd())
+
+        self.assertEqual(transport._command, command)
+        transport.close()
+
+    def test_stdio_transport_reporta_ejecutable_inexistente(self) -> None:
+        with self.assertRaisesRegex(McpTransportError, "No se encontró"):
+            StdioTransport(command=["ejecutable-que-no-existe-mcp"])
+
+    def test_stdio_transport_reporta_proceso_terminado(self) -> None:
+        with self.assertRaisesRegex(McpTransportError, "terminó inmediatamente"):
+            StdioTransport(command=[sys.executable, "-c", "pass"])
 
 
 if __name__ == "__main__":
