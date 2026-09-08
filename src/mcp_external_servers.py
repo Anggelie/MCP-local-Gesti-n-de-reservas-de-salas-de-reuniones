@@ -6,7 +6,7 @@ import sys
 import os
 from pathlib import Path
 
-from .config import DEFAULT_RESERVATIONS_URL, MCP_LOG_FILE, PROJECT_ROOT
+from .config import DEFAULT_RESERVATIONS_MODE, DEFAULT_RESERVATIONS_URL, MCP_LOG_FILE, PROJECT_ROOT
 from .mcp_client import McpClient
 from .mcp_interaction_logger import McpInteractionLogger
 from .mcp_http_transport import HttpTransport
@@ -72,5 +72,20 @@ def create_remote_reservations_client(
     remote_url = url or os.getenv("MCP_RESERVATIONS_URL", DEFAULT_RESERVATIONS_URL)
     return McpClient(
         HttpTransport(remote_url, timeout=timeout),
-        McpInteractionLogger(log_file, "reservations_remote"),
+        McpInteractionLogger(log_file, "reservations"),
+    )
+
+
+def create_configured_reservations_client(
+    mode: str | None = None,
+    log_file: Path = MCP_LOG_FILE,
+) -> McpClient:
+    """Crea reservations local o remoto según MCP_RESERVATIONS_MODE."""
+    selected_mode = (mode or os.getenv("MCP_RESERVATIONS_MODE") or DEFAULT_RESERVATIONS_MODE).strip().lower()
+    if selected_mode == "local":
+        return create_reservations_client(log_file)
+    if selected_mode == "remote":
+        return create_remote_reservations_client(log_file=log_file)
+    raise ValueError(
+        "MCP_RESERVATIONS_MODE inválido. Usa 'local' o 'remote'."
     )

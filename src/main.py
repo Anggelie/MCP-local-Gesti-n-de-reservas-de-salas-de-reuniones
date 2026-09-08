@@ -5,7 +5,7 @@ from .config import APPLICATION_NAME, CLEAR_COMMAND, EXIT_COMMAND, PROJECT_ROOT
 from .mcp_external_servers import (
     create_filesystem_client,
     create_git_client,
-    create_reservations_client,
+    create_configured_reservations_client,
 )
 from .llm_client import ClaudeClient
 from .logger import configure_logging
@@ -25,7 +25,7 @@ def run() -> None:
     manager = McpManager()
     try:
         workspace = PROJECT_ROOT / "sandbox" / "chatbot_workspace"
-        manager.register("reservations", create_reservations_client())
+        manager.register("reservations", create_configured_reservations_client())
         manager.register("filesystem", create_filesystem_client(workspace))
         manager.register("git", create_git_client())
         manager.initialize_all()
