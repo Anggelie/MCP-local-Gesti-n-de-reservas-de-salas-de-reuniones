@@ -144,11 +144,14 @@ class ReservationService:
         raise ReservationError(f"No existe la sala '{room_id}'.")
 
     @staticmethod
-    def _validate_date(date: str) -> None:
+    def _validate_date(date_text: str) -> None:
         try:
-            datetime.strptime(date, DATE_FORMAT)
+            parsed_date = datetime.strptime(date_text, DATE_FORMAT).date()
         except ValueError as error:
             raise ReservationError("date debe tener el formato YYYY-MM-DD.") from error
+
+        if parsed_date < datetime.now().date():
+            raise ReservationError("La fecha no puede ser una fecha pasada. Debe ser hoy o una fecha futura.")
 
     @classmethod
     def _validate_interval(cls, date: str, start_time: str, end_time: str) -> None:
@@ -158,6 +161,9 @@ class ReservationService:
             end = datetime.strptime(end_time, TIME_FORMAT)
         except ValueError as error:
             raise ReservationError("Las horas deben tener el formato HH:MM.") from error
+
+        if datetime.strptime(date, DATE_FORMAT).date() == datetime.now().date() and start.time() < datetime.now().time():
+            raise ReservationError("La hora no puede ser una hora pasada.")
         if start >= end:
             raise ReservationError("La hora de inicio debe ser menor que la hora final.")
 

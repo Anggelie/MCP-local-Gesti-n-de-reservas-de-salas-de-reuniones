@@ -3,6 +3,7 @@
 import json
 import tempfile
 import unittest
+from datetime import date, timedelta
 from pathlib import Path
 
 from src.reservation_service import ReservationError, ReservationService
@@ -35,6 +36,13 @@ class ReservationServiceTests(unittest.TestCase):
     def test_hora_inicial_menor_que_hora_final(self) -> None:
         with self.assertRaisesRegex(ReservationError, "menor"):
             self.service.check_availability("room-001", "2026-09-15", "11:00", "10:00")
+
+    def test_rechaza_fecha_pasada(self) -> None:
+        past_date = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+        with self.assertRaisesRegex(ReservationError, "no puede ser una fecha pasada|fecha pasada"):
+            self.service.create_reservation(
+                "room-001", past_date, "09:00", "10:00", "Anggelie", "Reunión pasada"
+            )
 
     def test_cancela_reserva_inexistente(self) -> None:
         with self.assertRaisesRegex(ReservationError, "No existe"):

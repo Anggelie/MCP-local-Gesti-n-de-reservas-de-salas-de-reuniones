@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Mapping
 from typing import Any
 
@@ -83,6 +84,14 @@ class ChatbotHost:
         }
 
     @staticmethod
+    def _sanitize_text(text: str) -> str:
+        return re.sub(
+            r"[\U0001F300-\U0001FAFF\U00002600-\U000026FF\U00002700-\U000027BF\u200d\ufe0f]",
+            "",
+            text,
+        )
+
+    @staticmethod
     def _text_from_content(content: list[Mapping[str, Any]]) -> str:
         text = "".join(
             str(block.get("text", ""))
@@ -91,4 +100,4 @@ class ChatbotHost:
         )
         if not text:
             raise RuntimeError("Claude no devolvió texto después de procesar la solicitud.")
-        return text
+        return ChatbotHost._sanitize_text(text).strip()

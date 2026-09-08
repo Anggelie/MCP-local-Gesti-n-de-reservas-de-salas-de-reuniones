@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "reservation_id": "RES-0001",
+    "room_id": "room-002",
+    "date": "2026-10-15",
+    "start_time": "16:00",
+    "end_time": "18:00",
+    "reserved_by": "Anggelie",
+    "title": "Repaso de clase"
+  },
+  {
+    "reservation_id": "RES-0002",
+    "room_id": "room-003",
+    "date": "2026-08-02",
+    "start_time": "14:00",
+    "end_time": "14:25",
+    "reserved_by": "Lucas",
+    "title": "Reunion para planear un sprint"
+  }
+]
