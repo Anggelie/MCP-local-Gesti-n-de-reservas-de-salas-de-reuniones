@@ -561,3 +561,25 @@ La suite cubre JSON-RPC, el servidor de reservas, el cliente MCP, los transporte
 El proyecto demuestra un flujo completo de comunicación MCP construido manualmente. El mismo servidor de reservas puede utilizarse localmente mediante `stdio` y remotamente mediante HTTP/HTTPS, sin duplicar la lógica de reservas ni depender de un SDK MCP.
 
 La integración con Filesystem MCP y Git MCP permite coordinar herramientas de distintos servidores mediante un catálogo unificado. Los logs de aplicación y el script de captura permiten relacionar las operaciones JSON-RPC/MCP con el tráfico de red. La persistencia actual en archivos JSON es suficiente para la demostración, pero puede ser efímera en Render y deberá reemplazarse por una solución persistente en una fase posterior si el proyecto lo requiere.
+
+## Dificultades y lecciones aprendidas
+
+Durante el desarrollo se presentaron varias dificultades técnicas relacionadas con la implementación manual del protocolo y con los distintos entornos de ejecución.
+
+- Implementar MCP y JSON-RPC manualmente exigió construir las solicitudes, respuestas, errores, notificaciones y correlaciones mediante `id`, sin delegar estas responsabilidades en FastMCP o en un SDK de MCP.
+- Coordinar varios servidores desde un solo chatbot requirió separar claramente el `ChatbotHost`, el `McpManager`, los clientes MCP y los transportes. También fue necesario generar nombres únicos como `reservations__list_rooms`, `filesystem__write_file` y `git__git_status`.
+- El transporte local `stdio` y el transporte remoto HTTP/HTTPS tienen comportamientos diferentes. `stdio` utiliza procesos hijos y flujos de entrada y salida, mientras HTTP utiliza solicitudes `POST` hacia `/mcp` y un endpoint independiente `/health`.
+- En Windows se presentaron dificultades con `npx`, `uvx` y los procesos hijos. Fue necesario utilizar `cmd /c` para algunos comandos, controlar el cierre de procesos descendientes y considerar advertencias de limpieza de `Popen` durante las pruebas de servidores externos.
+- Git MCP no proporciona una herramienta `git_init`. Por esa razón, la inicialización de repositorios de demostración se realiza externamente con `git init`, mientras que el estado, staging, commit e historial se ejecutan mediante Git MCP.
+- Render requiere que el servidor escuche en `0.0.0.0` y utilice el puerto entregado mediante `PORT`. La configuración conserva `127.0.0.1:8000` para uso local y permite que Render inyecte sus valores sin fijar un puerto cloud específico.
+- El análisis directo de JSON-RPC en Wireshark está limitado cuando la comunicación utiliza HTTPS, porque el contenido de aplicación está cifrado mediante TLS. Por ello, la captura permite observar DNS, TCP, IPs, puertos, handshake TLS y tráfico cifrado, pero no necesariamente el JSON-RPC en texto plano.
+- Los logs de aplicación resultaron necesarios para correlacionar las operaciones MCP con la captura de red. El archivo de log conserva servidor, dirección, método, identificador y mensaje JSON, lo que permite relacionar una operación lógica con sus tiempos de red.
+- Separar la lógica del protocolo del transporte permitió reutilizar el mismo `McpProtocolHandler` con `stdio` y HTTP, sin duplicar la implementación de MCP ni la lógica de `ReservationService`.
+
+### Lecciones aprendidas
+
+El proyecto permitió comprender que MCP organiza capacidades y herramientas, mientras JSON-RPC define la estructura de los mensajes, sus identificadores y sus errores. La separación entre ambos conceptos facilita explicar el protocolo y probar cada capa de forma independiente.
+
+También se comprendió la importancia de una arquitectura cliente-servidor en la que el cliente descubre herramientas, el servidor ejecuta la operación y el resultado se correlaciona con la solicitud original. El transporte puede cambiar sin modificar la lógica del protocolo: el mismo servidor de reservas funciona mediante `stdio` y mediante HTTP/HTTPS.
+
+La integración de HTTPS mostró que la seguridad del transporte modifica lo que puede observarse en un analizador de protocolos. TLS protege el contenido JSON-RPC frente a observadores de red, por lo que el análisis debe combinar evidencias de las capas inferiores con logs de aplicación controlados. Finalmente, la configuración explícita de rutas, puertos, procesos y logs demostró que las pruebas reproducibles son esenciales cuando se trabaja con servidores locales, procesos externos y despliegues remotos.
